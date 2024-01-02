@@ -1,0 +1,76 @@
+
+// Rainbow Dream Mr Beast - Forex Trading Robot
+// Developer's Site: forexroboteasy.com
+// Developer: Forex Robot Easy Team
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <Timeseries\Timeseries.mqh>
+
+// Define input parameters
+input string Symbol = 'EURUSD'; // Trading symbol
+input ENUM_TIMEFRAMES Timeframe = PERIOD_H1; // Trading timeframe
+input double RiskPercentage = 1.0; // Risk percentage for each trade
+input double StopLossPercentage = 2.0; // Stop loss percentage for each trade
+
+// Define global variables
+CTrade Trade; // Trade class instance
+CTimeseries Series; // Timeseries class instance
+
+// Initialize function
+int OnInit()
+{
+   // Set up trade parameters
+   Trade.SetExpertMagicNumber(123456); // Magic number for identifying trades
+   Trade.SetDeviationInPoints(10); // Maximum allowed deviation from requested price
+
+   // Subscribe to the trading symbol and timeframe
+   if(!Series.SetSymbol(Symbol, Timeframe))
+   {
+      Print('Error subscribing to symbol ', Symbol);
+      return INIT_FAILED;
+   }
+
+   return INIT_SUCCEEDED;
+}
+
+// Deinitialize function
+void OnDeinit(const int reason)
+{
+   // Clean up resources
+   Series.Free();
+}
+
+// Start function
+void OnStart()
+{
+   // Get the current bid price
+   double currentBid = Series.Bid();
+
+   // Calculate the trade volume based on risk percentage
+   double tradeVolume = AccountBalance() * RiskPercentage / 100.0;
+
+   // Calculate the stop loss level based on stop loss percentage
+   double stopLossLevel = currentBid - (currentBid * StopLossPercentage / 100.0);
+
+   // Check if there is a trading opportunity
+   if(currentBid > stopLossLevel)
+   {
+      // Open a buy trade
+      Trade.Buy(tradeVolume, Symbol, 0, stopLossLevel, 'Rainbow Dream Mr Beast');
+
+      // Check for trade execution success
+      if(Trade.ResultRetcode() == TRADE_RETCODE_DONE)
+      {
+         Print('Buy trade executed successfully');
+      }
+      else
+      {
+         Print('Error executing buy trade: ', Trade.ResultRetcode());
+      }
+   }
+   else
+   {
+      Print('No trading opportunity identified');
+   }
+}
